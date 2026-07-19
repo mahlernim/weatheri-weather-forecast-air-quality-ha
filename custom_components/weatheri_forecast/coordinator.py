@@ -75,7 +75,6 @@ class WeatheriForecastCoordinator(
         )
         self.entry, self.endpoint, self.api = entry, endpoint, api
         self.store: Store[dict] = Store(hass, STORE_VERSION, f"{DOMAIN}.{entry.entry_id}.forecast")
-        self.legacy_store: Store[dict] = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}")
         self._init_health()
 
     @property
@@ -90,8 +89,6 @@ class WeatheriForecastCoordinator(
 
     async def _async_load_cache(self) -> None:
         stored = await self.store.async_load()
-        if not stored:
-            stored = await self.legacy_store.async_load()
         if not stored:
             return
         try:
@@ -212,7 +209,3 @@ class WeatheriAirCoordinator(
         await self.store.async_save({"snapshot": snapshot.as_dict()})
         self._schedule_expiration(snapshot.source_updated_at + AIR_MAX_AGE)
         return snapshot
-
-
-# Compatibility import for v0.1 consumers.
-WeatheriCoordinator = WeatheriForecastCoordinator

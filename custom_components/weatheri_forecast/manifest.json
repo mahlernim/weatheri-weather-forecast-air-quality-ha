@@ -7,6 +7,6 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/mahlernim/weatheri-weather-forecast-air-quality-ha/issues",
   "name": "Weatheri Weather & Air",
-  "requirements": ["beautifulsoup4>=4.12.2"],
-  "version": "0.2.1"
+  "requirements": ["beautifulsoup4==4.13.3"],
+  "version": "0.2.2"
 }

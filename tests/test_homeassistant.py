@@ -10,10 +10,8 @@ pytest.importorskip("homeassistant")
 pytest.importorskip("pytest_homeassistant_custom_component")
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.const import CONF_URL
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.weatheri_forecast import async_migrate_entry
 from custom_components.weatheri_forecast.api import WeatheriApiError
 from custom_components.weatheri_forecast.catalog import get_location
 from custom_components.weatheri_forecast.const import (
@@ -23,6 +21,7 @@ from custom_components.weatheri_forecast.const import (
     CONF_FORECAST_NAME,
     CONF_FORECAST_RID,
     DOMAIN,
+    ENTRY_VERSION,
     NO_AIR_STATION,
 )
 from custom_components.weatheri_forecast.binary_sensor import (
@@ -90,7 +89,7 @@ async def test_reconfigure_station_without_changing_location(hass):
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="1101010100",
-        version=2,
+        version=ENTRY_VERSION,
         data={
             CONF_FORECAST_RID: "1101010100",
             CONF_FORECAST_GROUP: "9",
@@ -122,29 +121,7 @@ async def test_reconfigure_station_without_changing_location(hass):
     assert entry.data[CONF_AIR_STATION] == "덕천동"
 
 
-@pytest.mark.asyncio
-async def test_version_one_url_migration(hass):
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="1101010100",
-        version=1,
-        data={
-            CONF_URL: "https://www.weatheri.co.kr/forecast/forecast01.php?rid=1101010100&k=9&a_name=%EB%B6%80%EC%82%B0"
-        },
-    )
-    entry.add_to_hass(hass)
-    assert await async_migrate_entry(hass, entry)
-    assert entry.version == 2
-    assert entry.data == {
-        CONF_FORECAST_RID: "1101010100",
-        CONF_FORECAST_GROUP: "9",
-        CONF_FORECAST_NAME: "부산",
-        CONF_AIR_REGION_CODE: "13",
-        CONF_AIR_STATION: None,
-    }
-
-
-def test_entity_policy_and_removed_timestamp_sensor():
+def test_entity_policy():
     assert [item.key for item in TEMPERATURES] == [
         "today_high", "today_low", "tomorrow_high", "tomorrow_low"
     ]
@@ -194,7 +171,7 @@ def test_translation_independent_entity_object_ids(hass):
     """Entity IDs must not change when translated names contain punctuation."""
     location = get_location("1101010100")
     endpoint = build_forecast_url(location)
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=location.rid, version=2)
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=location.rid, version=ENTRY_VERSION)
     forecast = WeatheriForecastCoordinator(hass, entry, endpoint, _SequenceApi())
     air = WeatheriAirCoordinator(
         hass, entry, endpoint, build_air_url("13"), "덕천동", _SequenceApi()
@@ -212,7 +189,7 @@ async def test_independent_coordinators_cache_recovery_and_expiration(hass):
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=location.rid,
-        version=2,
+        version=ENTRY_VERSION,
         data={CONF_FORECAST_RID: location.rid},
     )
     entry.add_to_hass(hass)

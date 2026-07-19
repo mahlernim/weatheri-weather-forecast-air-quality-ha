@@ -17,12 +17,6 @@ class ForecastLocation:
     forecast_group: str
     air_region_code: str
 
-    @property
-    def entity_slug(self) -> str:
-        """Return a stable entity slug; retain the public Busan IDs."""
-        return "busan" if self.rid == "1101010100" else f"location_{self.rid}"
-
-
 def _load_catalog() -> dict[str, ForecastLocation]:
     path = Path(__file__).with_name("location_catalog.json")
     raw = json.loads(path.read_text(encoding="utf-8"))

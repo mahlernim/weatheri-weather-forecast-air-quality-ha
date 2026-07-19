@@ -19,17 +19,24 @@ Weatheri 지역별 예보의 오늘·내일 최고/최저 기온과 실시간 �
 - 오늘/내일 최고·최저 기온과 PM10/PM2.5 기본 제공
 - 오존, 이산화질소, 일산화탄소, 아황산가스, 통합대기환경지수 선택 제공
 - 예보는 같은 현지 날짜, 대기정보는 관측 시각부터 최대 3시간 동안 캐시 사용
-- 기존 `weatheri_forecast` 도메인과 v0.1 온도 엔터티 ID 유지
 
 ### 설치
 
 Home Assistant 2026.3.0 이상이 필요합니다.
 
-1. 이 저장소의 `custom_components/weatheri_forecast` 폴더를 Home Assistant의 `/config/custom_components/weatheri_forecast`로 복사합니다.
-2. Home Assistant를 다시 시작합니다.
-3. **설정 → 기기 및 서비스 → 통합 구성요소 추가 → Weatheri Weather & Air**를 선택합니다.
+HACS 사용자 지정 저장소:
 
-현재 버전은 수동 설치용이며 HACS 기본 저장소에 등록되어 있지 않습니다. 사용자 지정 저장소로 설치하려면 저장소가 공개된 이후 HACS에서 유형을 **Integration**으로 지정해야 합니다.
+1. HACS의 **통합 구성요소 → 사용자 지정 저장소**를 엽니다.
+2. `https://github.com/mahlernim/weatheri-weather-forecast-air-quality-ha`를 입력하고 유형을 **Integration**으로 지정합니다.
+3. **Weatheri Weather & Air**를 설치하고 Home Assistant를 다시 시작합니다.
+
+수동 설치:
+
+1. 최신 GitHub 릴리스의 ZIP 파일을 내려받습니다.
+2. `custom_components/weatheri_forecast` 폴더를 Home Assistant의 `/config/custom_components/weatheri_forecast`로 복사합니다.
+3. Home Assistant를 다시 시작합니다.
+
+설치 후 **설정 → 기기 및 서비스 → 통합 구성요소 추가 → Weatheri Weather & Air**를 선택합니다. 이 통합 구성요소는 아직 HACS 기본 저장소에 등록되어 있지 않습니다.
 
 ### 설정
 
@@ -86,17 +93,24 @@ This is an unofficial community integration. It is not developed, endorsed, spon
 - Today/tomorrow high and low temperatures plus PM10 and PM2.5 by default
 - Optional ozone, nitrogen dioxide, carbon monoxide, sulfur dioxide, and comprehensive AQI entities
 - Same-local-date forecast cache and air cache limited to three hours from source time
-- Compatible `weatheri_forecast` domain and v0.1 temperature entity IDs
 
 ### Installation
 
 Home Assistant 2026.3.0 or newer is required.
 
-1. Copy `custom_components/weatheri_forecast` from this repository to `/config/custom_components/weatheri_forecast` in Home Assistant.
-2. Restart Home Assistant.
-3. Open **Settings → Devices & services → Add integration → Weatheri Weather & Air**.
+HACS custom repository:
 
-This release is prepared for manual installation and is not listed in the HACS default store. Once the repository is public, a custom-repository install must use the **Integration** category.
+1. Open **HACS → Integrations → Custom repositories**.
+2. Add `https://github.com/mahlernim/weatheri-weather-forecast-air-quality-ha` with category **Integration**.
+3. Install **Weatheri Weather & Air** and restart Home Assistant.
+
+Manual installation:
+
+1. Download the ZIP file from the latest GitHub release.
+2. Copy `custom_components/weatheri_forecast` to `/config/custom_components/weatheri_forecast` in Home Assistant.
+3. Restart Home Assistant.
+
+After installation, open **Settings → Devices & services → Add integration → Weatheri Weather & Air**. This integration is not yet listed in the HACS default store.
 
 ### Setup
 

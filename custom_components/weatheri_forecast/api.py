@@ -11,7 +11,7 @@ _REQUEST_HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.5",
     "User-Agent": (
-        "Weatheri-Weather-Air-Home-Assistant/0.2.1 "
+        "Weatheri-Weather-Air-Home-Assistant/0.2.2 "
         "(+https://github.com/mahlernim/weatheri-weather-forecast-air-quality-ha)"
     ),
 }

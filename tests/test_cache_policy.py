@@ -1,14 +1,14 @@
 from datetime import date, datetime, timezone
 
 from weatheri_forecast.models import (
+    ForecastSnapshot,
     WeatheriDayForecast,
-    WeatheriSnapshot,
     snapshot_is_current,
 )
 
 
-def _snapshot(source_date: date) -> WeatheriSnapshot:
-    return WeatheriSnapshot(
+def _snapshot(source_date: date) -> ForecastSnapshot:
+    return ForecastSnapshot(
         location="부산",
         source_date=source_date,
         fetched_at=datetime(2026, 7, 19, 6, 0, tzinfo=timezone.utc),
@@ -27,4 +27,3 @@ def test_snapshot_expires_at_date_boundary():
 
 def test_missing_snapshot_is_not_current():
     assert not snapshot_is_current(None, date(2026, 7, 19))
-

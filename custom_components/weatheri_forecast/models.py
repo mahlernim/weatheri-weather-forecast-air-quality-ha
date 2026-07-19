@@ -109,7 +109,3 @@ def air_snapshot_is_fresh(snapshot: AirQualitySnapshot | None, now: datetime) ->
         return False
     age = now - snapshot.source_updated_at
     return age.total_seconds() >= 0 and age <= AIR_MAX_AGE
-
-
-# Compatibility for consumers and fixtures written against v0.1.
-WeatheriSnapshot = ForecastSnapshot

@@ -11,7 +11,6 @@ CONF_FORECAST_GROUP = "forecast_group"
 CONF_FORECAST_NAME = "forecast_name"
 CONF_AIR_REGION_CODE = "air_region_code"
 CONF_AIR_STATION = "air_station"
-CONF_FORECAST_URL = "forecast_url"  # Version 1 migration only.
 
 ENTRY_VERSION = 2
 NO_AIR_STATION = "__forecast_only__"
