@@ -1,0 +1,24 @@
+[project]
+name = "weatheri-weather-forecast-air-quality-ha"
+version = "0.2.1"
+requires-python = ">=3.13"
+dependencies = ["beautifulsoup4>=4.12.2"]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.0",
+  "pytest-asyncio>=0.24",
+  "pytest-homeassistant-custom-component",
+  "aiohttp",
+  "ruff>=0.9",
+  "pillow>=11.0"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["custom_components/weatheri_forecast"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"

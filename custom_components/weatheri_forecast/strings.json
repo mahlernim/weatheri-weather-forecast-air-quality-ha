@@ -1,0 +1,49 @@
+{
+  "title": "Weatheri Weather & Air",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Forecast location / 예보 지역",
+        "description": "Select a supported Weatheri forecast location.",
+        "data": {"forecast_rid": "Forecast location / 예보 지역"}
+      },
+      "air_station": {
+        "title": "Air-quality station / 대기 측정소",
+        "description": "Select a station associated with the forecast region, or use forecast only.",
+        "data": {"air_station": "Air-quality station / 대기 측정소"}
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the Weatheri forecast page",
+      "cannot_connect_air": "The air station list is temporarily unavailable; forecast-only setup remains available",
+      "invalid_forecast_data": "Weatheri returned incomplete or unexpected forecast data",
+      "invalid_air_data": "Weatheri returned incomplete or unexpected air-quality data",
+      "invalid_location": "Select a supported forecast location",
+      "invalid_station": "Select a station from the current list",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "This forecast location is already configured",
+      "reconfigure_successful": "Air-quality station updated"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "today_high": {"name": "Today high"},
+      "today_low": {"name": "Today low"},
+      "tomorrow_high": {"name": "Tomorrow high"},
+      "tomorrow_low": {"name": "Tomorrow low"},
+      "pm10": {"name": "PM10"},
+      "pm25": {"name": "PM2.5"},
+      "ozone": {"name": "Ozone"},
+      "nitrogen_dioxide": {"name": "Nitrogen dioxide"},
+      "carbon_monoxide": {"name": "Carbon monoxide"},
+      "sulfur_dioxide": {"name": "Sulfur dioxide"},
+      "aqi": {"name": "Comprehensive AQI"}
+    },
+    "binary_sensor": {
+      "data_current": {"name": "Forecast data current"},
+      "air_data_current": {"name": "Air data current"}
+    }
+  }
+}
