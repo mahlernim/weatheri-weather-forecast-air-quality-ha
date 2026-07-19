@@ -19,6 +19,9 @@ testpaths = ["tests"]
 pythonpath = ["custom_components/weatheri_forecast"]
 asyncio_mode = "auto"
 
+[tool.setuptools.package-data]
+"custom_components.weatheri_forecast" = ["*.json", "translations/*.json", "brand/*.png"]
+
 [tool.ruff]
 line-length = 100
-target-version = "py313"
+target-version = "py314"
