@@ -16,7 +16,9 @@ from .coordinator import WeatheriAirCoordinator, WeatheriForecastCoordinator
 from .entity import WeatheriEntity
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     runtime: WeatheriRuntimeData = hass.data[DOMAIN][entry.entry_id]
     entities: list[BinarySensorEntity] = [WeatheriForecastHealth(runtime.forecast)]
     if runtime.air:
@@ -35,8 +37,12 @@ class _HealthBase(WeatheriEntity, BinarySensorEntity):
     @staticmethod
     def _attempt_attributes(coordinator) -> dict[str, Any]:
         return {
-            "last_success": coordinator.last_success.isoformat() if coordinator.last_success else None,
-            "last_attempt": coordinator.last_attempt.isoformat() if coordinator.last_attempt else None,
+            "last_success": coordinator.last_success.isoformat()
+            if coordinator.last_success
+            else None,
+            "last_attempt": coordinator.last_attempt.isoformat()
+            if coordinator.last_attempt
+            else None,
             "last_attempt_success": coordinator.last_attempt_success,
             "last_error": coordinator.last_error,
             "using_cached_data": coordinator.using_cached_data,
@@ -65,6 +71,7 @@ class WeatheriForecastHealth(_HealthBase):
         return {
             "source_date": data.source_date.isoformat() if data else None,
             **self._attempt_attributes(self.coordinator),
+            "rollover_retry_count": self.coordinator.rollover_retry_count,
         }
 
 

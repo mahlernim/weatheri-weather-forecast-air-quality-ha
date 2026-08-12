@@ -15,6 +15,11 @@ CONF_AIR_STATION = "air_station"
 ENTRY_VERSION = 2
 NO_AIR_STATION = "__forecast_only__"
 DEFAULT_UPDATE_INTERVAL = timedelta(hours=1)
+FORECAST_RETRY_DELAYS = (
+    timedelta(minutes=5),
+    timedelta(minutes=15),
+    timedelta(minutes=30),
+)
 AIR_MAX_AGE = timedelta(hours=3)
 AIR_FUTURE_TOLERANCE = timedelta(minutes=5)
 HTTP_TIMEOUT_SECONDS = 15

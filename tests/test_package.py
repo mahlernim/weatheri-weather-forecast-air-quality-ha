@@ -10,7 +10,7 @@ def test_manifest_is_repository_ready():
     assert manifest["domain"] == "weatheri_forecast"
     assert manifest["config_flow"] is True
     assert manifest["iot_class"] == "cloud_polling"
-    assert manifest["version"] == "0.2.2"
+    assert manifest["version"] == "0.2.3"
     assert any(item.startswith("beautifulsoup4") for item in manifest["requirements"])
 
 

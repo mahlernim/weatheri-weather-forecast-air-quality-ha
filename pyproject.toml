@@ -1,6 +1,6 @@
 [project]
 name = "weatheri-weather-forecast-air-quality-ha"
-version = "0.2.2"
+version = "0.2.3"
 requires-python = ">=3.14.2"
 dependencies = ["beautifulsoup4==4.13.3"]
 
