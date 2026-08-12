@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from functools import partial
 import logging
+from functools import partial
 
 import voluptuous as vol
-
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -16,11 +15,20 @@ from homeassistant.util import dt as dt_util
 from .api import WeatheriApi, WeatheriApiError
 from .catalog import ForecastLocation, get_location, location_options
 from .const import (
-    CONF_AIR_REGION_CODE, CONF_AIR_STATION, CONF_FORECAST_GROUP,
-    CONF_FORECAST_NAME, CONF_FORECAST_RID, DOMAIN, ENTRY_VERSION, NO_AIR_STATION,
+    CONF_AIR_REGION_CODE,
+    CONF_AIR_STATION,
+    CONF_FORECAST_GROUP,
+    CONF_FORECAST_NAME,
+    CONF_FORECAST_RID,
+    DOMAIN,
+    ENTRY_VERSION,
+    NO_AIR_STATION,
 )
 from .parser import (
-    WeatheriParseError, discover_air_stations, parse_air_quality_html, parse_forecast_html,
+    WeatheriParseError,
+    discover_air_stations,
+    parse_air_quality_html,
+    parse_forecast_html,
 )
 from .url import build_air_url, build_forecast_url
 

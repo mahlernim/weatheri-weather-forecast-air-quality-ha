@@ -1,7 +1,6 @@
-from pathlib import Path
 import sys
 import types
-
+from pathlib import Path
 
 PACKAGE_DIR = (
     Path(__file__).parents[1] / "custom_components" / "weatheri_forecast"

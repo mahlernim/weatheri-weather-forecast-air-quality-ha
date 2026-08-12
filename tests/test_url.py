@@ -1,5 +1,4 @@
 import pytest
-
 from weatheri_forecast.catalog import get_location
 from weatheri_forecast.url import WeatheriUrlError, build_air_url, build_forecast_url
 

@@ -1,7 +1,7 @@
 """Home Assistant integration tests; skipped in parser-only environments."""
 
-from unittest.mock import AsyncMock, patch
 from datetime import datetime
+from unittest.mock import AsyncMock, patch
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -13,6 +13,10 @@ from homeassistant import config_entries, data_entry_flow
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.weatheri_forecast.api import WeatheriApiError
+from custom_components.weatheri_forecast.binary_sensor import (
+    WeatheriAirHealth,
+    WeatheriForecastHealth,
+)
 from custom_components.weatheri_forecast.catalog import get_location
 from custom_components.weatheri_forecast.const import (
     CONF_AIR_REGION_CODE,
@@ -24,19 +28,15 @@ from custom_components.weatheri_forecast.const import (
     ENTRY_VERSION,
     NO_AIR_STATION,
 )
-from custom_components.weatheri_forecast.binary_sensor import (
-    WeatheriAirHealth,
-    WeatheriForecastHealth,
+from custom_components.weatheri_forecast.coordinator import (
+    WeatheriAirCoordinator,
+    WeatheriForecastCoordinator,
 )
 from custom_components.weatheri_forecast.sensor import (
     AIR_SENSORS,
     TEMPERATURES,
     WeatheriAirSensor,
     WeatheriTemperatureSensor,
-)
-from custom_components.weatheri_forecast.coordinator import (
-    WeatheriAirCoordinator,
-    WeatheriForecastCoordinator,
 )
 from custom_components.weatheri_forecast.url import build_air_url, build_forecast_url
 
@@ -46,7 +46,9 @@ pytestmark = pytest.mark.usefixtures("enable_custom_integrations")
 @pytest.mark.asyncio
 async def test_dropdown_progression_and_forecast_only(hass):
     with (
-        patch("custom_components.weatheri_forecast.config_flow._validate_forecast", new=AsyncMock()),
+        patch(
+            "custom_components.weatheri_forecast.config_flow._validate_forecast", new=AsyncMock()
+        ),
         patch(
             "custom_components.weatheri_forecast.config_flow._load_air_page",
             new=AsyncMock(return_value=("<html/>", ["덕천동", "화명동"])),
@@ -74,7 +76,9 @@ async def test_duplicate_rid_is_prevented(hass):
         unique_id="1101010100",
         data={CONF_FORECAST_RID: "1101010100"},
     ).add_to_hass(hass)
-    with patch("custom_components.weatheri_forecast.config_flow._validate_forecast", new=AsyncMock()):
+    with patch(
+        "custom_components.weatheri_forecast.config_flow._validate_forecast", new=AsyncMock()
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
@@ -104,9 +108,7 @@ async def test_reconfigure_station_without_changing_location(hass):
             "custom_components.weatheri_forecast.config_flow._load_air_page",
             new=AsyncMock(return_value=("<html/>", ["덕천동"])),
         ),
-        patch(
-            "custom_components.weatheri_forecast.config_flow.parse_air_quality_html"
-        ),
+        patch("custom_components.weatheri_forecast.config_flow.parse_air_quality_html"),
         patch.object(hass.config_entries, "async_reload", new=AsyncMock()),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -123,14 +125,15 @@ async def test_reconfigure_station_without_changing_location(hass):
 
 def test_entity_policy():
     assert [item.key for item in TEMPERATURES] == [
-        "today_high", "today_low", "tomorrow_high", "tomorrow_low"
+        "today_high",
+        "today_low",
+        "tomorrow_high",
+        "tomorrow_low",
     ]
     enabled = [item.key for item in AIR_SENSORS if item.entity_registry_enabled_default]
     disabled = [item.key for item in AIR_SENSORS if not item.entity_registry_enabled_default]
     assert enabled == ["pm10", "pm25"]
-    assert disabled == [
-        "ozone", "nitrogen_dioxide", "carbon_monoxide", "sulfur_dioxide", "aqi"
-    ]
+    assert disabled == ["ozone", "nitrogen_dioxide", "carbon_monoxide", "sulfur_dioxide", "aqi"]
     sensor_source = (
         __import__("pathlib").Path(__file__).parents[1]
         / "custom_components/weatheri_forecast/sensor.py"
@@ -149,9 +152,9 @@ class _SequenceApi:
         return response
 
 
-def _forecast_html():
-    return """
-    <table><tr><td>07월 19일</td><td>07월 20일</td></tr><tr>
+def _forecast_html(today=19, tomorrow=20):
+    return f"""
+    <table><tr><td>07월 {today}일</td><td>07월 {tomorrow}일</td></tr><tr>
     <td onclick='showthree("1")'>29˚C 26˚C</td>
     <td onclick='showthree("2")'>32˚C 27˚C</td>
     </tr></table>
@@ -194,11 +197,16 @@ async def test_independent_coordinators_cache_recovery_and_expiration(hass):
     )
     entry.add_to_hass(hass)
     current = [datetime(2026, 7, 19, 18, 30, tzinfo=ZoneInfo("Asia/Seoul"))]
-    forecast_api = _SequenceApi(_forecast_html(), WeatheriApiError("forecast down"), WeatheriApiError("forecast down"))
+    forecast_api = _SequenceApi(
+        _forecast_html(), WeatheriApiError("forecast down"), WeatheriApiError("forecast down")
+    )
     air_api = _SequenceApi(_air_html(), WeatheriApiError("air down"), WeatheriApiError("air down"))
     forecast = WeatheriForecastCoordinator(hass, entry, endpoint, forecast_api)
     air = WeatheriAirCoordinator(hass, entry, endpoint, build_air_url("13"), "덕천동", air_api)
-    with patch("custom_components.weatheri_forecast.coordinator.dt_util.now", side_effect=lambda: current[0]):
+    with patch(
+        "custom_components.weatheri_forecast.coordinator.dt_util.now",
+        side_effect=lambda: current[0],
+    ):
         await forecast.async_initialize()
         await air.async_initialize()
         assert forecast.is_data_current and air.is_data_current
@@ -216,5 +224,46 @@ async def test_independent_coordinators_cache_recovery_and_expiration(hass):
         assert not forecast.is_data_current
         assert not air.is_data_current
         assert air.data is None
-    forecast.async_cancel_expiration()
+    forecast.async_shutdown()
     air.async_cancel_expiration()
+
+
+@pytest.mark.asyncio
+async def test_midnight_expiration_refreshes_and_retries_delayed_source(hass):
+    location = get_location("1101010100")
+    endpoint = build_forecast_url(location)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=location.rid,
+        version=ENTRY_VERSION,
+        data={CONF_FORECAST_RID: location.rid},
+    )
+    entry.add_to_hass(hass)
+    current = [datetime(2026, 7, 19, 23, 55, tzinfo=ZoneInfo("Asia/Seoul"))]
+    api = _SequenceApi(
+        _forecast_html(),
+        _forecast_html(),
+        _forecast_html(20, 21),
+    )
+    forecast = WeatheriForecastCoordinator(hass, entry, endpoint, api)
+
+    with patch(
+        "custom_components.weatheri_forecast.coordinator.dt_util.now",
+        side_effect=lambda: current[0],
+    ):
+        await forecast.async_initialize()
+        forecast.async_cancel_expiration()
+        current[0] = datetime(2026, 7, 20, 0, 0, 1, tzinfo=ZoneInfo("Asia/Seoul"))
+        forecast._handle_expiration(current[0])
+        await hass.async_block_till_done()
+
+        assert not forecast.is_data_current
+        assert forecast.rollover_retry_count == 1
+        assert forecast._cancel_retry is not None
+
+        await forecast.async_refresh()
+        assert forecast.is_data_current
+        assert forecast.rollover_retry_count == 0
+        assert forecast._cancel_retry is None
+
+    forecast.async_shutdown()

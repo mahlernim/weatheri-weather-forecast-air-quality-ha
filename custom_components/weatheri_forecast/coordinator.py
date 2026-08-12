@@ -2,21 +2,27 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from functools import partial
-import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.storage import Store
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .api import WeatheriApi, WeatheriApiError
-from .const import AIR_MAX_AGE, DEFAULT_UPDATE_INTERVAL, DOMAIN, STORE_VERSION
+from .const import (
+    AIR_MAX_AGE,
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+    FORECAST_RETRY_DELAYS,
+    STORE_VERSION,
+)
 from .models import (
     AirQualitySnapshot,
     ForecastSnapshot,
@@ -68,13 +74,21 @@ class WeatheriForecastCoordinator(
 ):
     """Fetch and retain complete same-day forecasts."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, endpoint: WeatheriUrl, api: WeatheriApi) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, endpoint: WeatheriUrl, api: WeatheriApi
+    ) -> None:
         super().__init__(
-            hass, _LOGGER, config_entry=entry, name=f"{DOMAIN}_{endpoint.rid}_forecast",
-            update_interval=DEFAULT_UPDATE_INTERVAL, always_update=True,
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=f"{DOMAIN}_{endpoint.rid}_forecast",
+            update_interval=DEFAULT_UPDATE_INTERVAL,
+            always_update=True,
         )
         self.entry, self.endpoint, self.api = entry, endpoint, api
         self.store: Store[dict] = Store(hass, STORE_VERSION, f"{DOMAIN}.{entry.entry_id}.forecast")
+        self.rollover_retry_count = 0
+        self._cancel_retry: Callable[[], None] | None = None
         self._init_health()
 
     @property
@@ -109,10 +123,15 @@ class WeatheriForecastCoordinator(
         self.last_attempt = now
         try:
             html = await self.api.async_fetch_html(self.endpoint.canonical)
-            snapshot = await self.hass.async_add_executor_job(partial(
-                parse_forecast_html, html, location=self.endpoint.location,
-                current_date=now.date(), fetched_at=now,
-            ))
+            snapshot = await self.hass.async_add_executor_job(
+                partial(
+                    parse_forecast_html,
+                    html,
+                    location=self.endpoint.location,
+                    current_date=now.date(),
+                    fetched_at=now,
+                )
+            )
         except (WeatheriApiError, WeatheriParseError) as err:
             self.last_attempt_success, self.last_error = False, str(err)
             if snapshot_is_current(self.data, now.date()):
@@ -121,9 +140,13 @@ class WeatheriForecastCoordinator(
                 _LOGGER.warning("Weatheri forecast failed; retaining same-day data: %s", err)
                 return self.data
             self.using_cached_data = False
+            if self.data is not None:
+                self._schedule_rollover_retry()
             raise UpdateFailed(str(err)) from err
         self.last_success, self.last_attempt_success = now, True
         self.last_error, self.using_cached_data = None, False
+        self.rollover_retry_count = 0
+        self.async_cancel_retry()
         await self.store.async_save({"snapshot": snapshot.as_dict()})
         self._schedule_forecast_expiration(snapshot)
         return snapshot
@@ -133,21 +156,67 @@ class WeatheriForecastCoordinator(
         next_midnight = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
         self._schedule_expiration(next_midnight)
 
+    @callback
+    def _handle_expiration(self, _now: datetime) -> None:
+        """Expire yesterday's data and immediately request the new date."""
+        self._cancel_expiration = None
+        self.async_set_updated_data(self.data)
+        self.hass.async_create_task(self.async_request_refresh())
 
-class WeatheriAirCoordinator(
-    _WeatheriCoordinatorBase, DataUpdateCoordinator[AirQualitySnapshot]
-):
+    def _schedule_rollover_retry(self) -> None:
+        """Retry a failed rollover without waiting for the hourly interval."""
+        self.async_cancel_retry()
+        delay = FORECAST_RETRY_DELAYS[
+            min(self.rollover_retry_count, len(FORECAST_RETRY_DELAYS) - 1)
+        ]
+        self.rollover_retry_count += 1
+
+        @callback
+        def _retry(_now: datetime) -> None:
+            self._cancel_retry = None
+            self.hass.async_create_task(self.async_request_refresh())
+
+        self._cancel_retry = async_call_later(self.hass, delay, _retry)
+
+    @callback
+    def async_cancel_retry(self) -> None:
+        if self._cancel_retry is not None:
+            self._cancel_retry()
+            self._cancel_retry = None
+
+    @callback
+    def async_shutdown(self) -> None:
+        self.async_cancel_expiration()
+        self.async_cancel_retry()
+
+
+class WeatheriAirCoordinator(_WeatheriCoordinatorBase, DataUpdateCoordinator[AirQualitySnapshot]):
     """Fetch and retain one station independently of forecast data."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, endpoint: WeatheriUrl,
-        air_url: str, station: str, api: WeatheriApi,
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        endpoint: WeatheriUrl,
+        air_url: str,
+        station: str,
+        api: WeatheriApi,
     ) -> None:
         super().__init__(
-            hass, _LOGGER, config_entry=entry, name=f"{DOMAIN}_{endpoint.rid}_air",
-            update_interval=DEFAULT_UPDATE_INTERVAL, always_update=True,
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=f"{DOMAIN}_{endpoint.rid}_air",
+            update_interval=DEFAULT_UPDATE_INTERVAL,
+            always_update=True,
         )
-        self.entry, self.endpoint, self.air_url, self.station, self.api = entry, endpoint, air_url, station, api
+        self.entry, self.endpoint, self.air_url, self.station, self.api = (
+            entry,
+            endpoint,
+            air_url,
+            station,
+            api,
+        )
         self.store: Store[dict] = Store(hass, STORE_VERSION, f"{DOMAIN}.{entry.entry_id}.air")
         self._init_health()
 
@@ -176,7 +245,10 @@ class WeatheriAirCoordinator(
         except (KeyError, TypeError, ValueError) as err:
             _LOGGER.warning("Ignoring invalid Weatheri air cache: %s", err)
             return
-        if snapshot.station != self.station or dt_util.now() - snapshot.source_updated_at > AIR_MAX_AGE:
+        if (
+            snapshot.station != self.station
+            or dt_util.now() - snapshot.source_updated_at > AIR_MAX_AGE
+        ):
             await self.store.async_remove()
             return
         self.data = snapshot
@@ -189,10 +261,15 @@ class WeatheriAirCoordinator(
         self.last_attempt = now
         try:
             html = await self.api.async_fetch_html(self.air_url)
-            snapshot = await self.hass.async_add_executor_job(partial(
-                parse_air_quality_html, html, station=self.station,
-                fetched_at=now, local_tz=now.tzinfo,
-            ))
+            snapshot = await self.hass.async_add_executor_job(
+                partial(
+                    parse_air_quality_html,
+                    html,
+                    station=self.station,
+                    fetched_at=now,
+                    local_tz=now.tzinfo,
+                )
+            )
         except (WeatheriApiError, WeatheriParseError) as err:
             self.last_attempt_success, self.last_error = False, str(err)
             if self.data is not None and now - self.data.source_updated_at <= AIR_MAX_AGE:

@@ -50,7 +50,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unloaded:
         runtime: WeatheriRuntimeData = hass.data[DOMAIN].pop(entry.entry_id)
-        runtime.forecast.async_cancel_expiration()
+        runtime.forecast.async_shutdown()
         if runtime.air:
             runtime.air.async_cancel_expiration()
     return unloaded

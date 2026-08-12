@@ -15,7 +15,7 @@ Weatheri 지역별 예보의 오늘·내일 최고/최저 기온과 실시간 �
 ### 기능
 
 - URL 입력 없이 예보 지역과 대기 측정소를 단계별 목록에서 선택
-- 예보와 대기정보를 서로 독립적으로 매시간 갱신
+- 예보와 대기정보를 서로 독립적으로 매시간 갱신하고, 날짜 변경 시 예보를 즉시 재확인
 - 오늘/내일 최고·최저 기온과 PM10/PM2.5 기본 제공
 - 오존, 이산화질소, 일산화탄소, 아황산가스, 통합대기환경지수 선택 제공
 - 예보는 같은 현지 날짜, 대기정보는 관측 시각부터 최대 3시간 동안 캐시 사용
@@ -59,7 +59,7 @@ HACS 사용자 지정 저장소:
 
 ### 캐시와 최신성
 
-예보 갱신이 실패하면 원본 예보 날짜가 Home Assistant 현지 날짜와 같은 동안만 마지막 완전한 자료를 유지합니다. 날짜가 바뀌면 사용할 수 없음으로 전환합니다. 대기정보는 Weatheri에 게시된 관측 시각부터 3시간 이내이고 PM10과 PM2.5가 모두 있을 때만 최신으로 판단합니다. 개별 `-` 값은 해당 항목만 사용할 수 없음으로 처리합니다.
+예보 갱신이 실패하면 원본 예보 날짜가 Home Assistant 현지 날짜와 같은 동안만 마지막 완전한 자료를 유지합니다. 날짜가 바뀌면 사용할 수 없음으로 전환하고 새 날짜 자료를 즉시 요청합니다. Weatheri 게시가 늦으면 5분, 15분, 30분 간격으로 다시 확인하므로 다음 매시간 갱신까지 기다리지 않습니다. 대기정보는 Weatheri에 게시된 관측 시각부터 3시간 이내이고 PM10과 PM2.5가 모두 있을 때만 최신으로 판단합니다. 개별 `-` 값은 해당 항목만 사용할 수 없음으로 처리합니다.
 
 ### 재구성
 
@@ -89,7 +89,7 @@ This is an unofficial community integration. It is not developed, endorsed, spon
 ### Features
 
 - Guided forecast-location and air-station lists; no pasted URL
-- Independent hourly forecast and air updates
+- Independent hourly forecast and air updates with an immediate date-boundary refresh
 - Today/tomorrow high and low temperatures plus PM10 and PM2.5 by default
 - Optional ozone, nitrogen dioxide, carbon monoxide, sulfur dioxide, and comprehensive AQI entities
 - Same-local-date forecast cache and air cache limited to three hours from source time
@@ -133,7 +133,7 @@ Air entities are not created for forecast-only entries. Separate reachability an
 
 ### Cache and freshness
 
-After a forecast failure, the last complete snapshot remains available only while its source date equals the Home Assistant local date; it expires at the date boundary. Air data is current only when the Weatheri-published observation is no more than three hours old and both PM10 and PM2.5 are present. A `-` affects only that measurement.
+After a forecast failure, the last complete snapshot remains available only while its source date equals the Home Assistant local date. At the date boundary it expires, requests the new date immediately, and retries after 5, 15, and 30 minutes if Weatheri has not published it yet. Air data is current only when the Weatheri-published observation is no more than three hours old and both PM10 and PM2.5 are present. A `-` affects only that measurement.
 
 ### Reconfiguration
 

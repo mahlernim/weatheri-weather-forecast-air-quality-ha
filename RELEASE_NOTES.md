@@ -1,9 +1,9 @@
-# v0.2.2
+# v0.2.3
 
 ## 한국어
 
-v0.2.2는 Weatheri Weather & Air의 첫 공개 릴리스입니다. 전국 예보 지역 선택, 선택적 대기 측정소, 독립적인 시간별 갱신, 제한된 캐시, 진단 엔터티와 한국어·영어 문서를 제공합니다. Weatheri 자료는 개인적·비상업적 용도로만 사용해야 하며 공개 게시, 재배포 또는 상업적 이용을 위한 통합 구성요소가 아닙니다. Home Assistant 2026.3.0 이상이 필요합니다.
+v0.2.3은 날짜가 바뀌는 즉시 새 예보를 요청하고, Weatheri 게시가 늦을 때 5분, 15분, 30분 간격으로 다시 확인합니다. 어제 예보는 오늘 자료로 재사용하지 않으며, 진단 엔터티에서 재시도 횟수를 확인할 수 있습니다. 기존 설정과 엔터티 ID는 그대로 유지됩니다. Home Assistant 2026.3.0 이상이 필요하며 Weatheri 자료의 개인적·비상업적 이용 제한은 그대로 적용됩니다.
 
 ## English
 
-v0.2.2 is the first public release of Weatheri Weather & Air. It provides nationwide forecast-location selection, an optional air-quality station, independent hourly updates, bounded caching, diagnostic entities, and Korean and English documentation. Weatheri data must be used only for personal, non-commercial purposes; this integration is not intended for public posting, redistribution, or commercial use. Home Assistant 2026.3.0 or newer is required.
+v0.2.3 requests the new forecast immediately at the local date boundary and retries after 5, 15, and 30 minutes when Weatheri publishes late. Yesterday's forecast is never reused as today's data, and the diagnostic entity reports the rollover retry count. Existing configuration and entity IDs are preserved. Home Assistant 2026.3.0 or newer is required, and Weatheri data remains limited to personal, non-commercial use.

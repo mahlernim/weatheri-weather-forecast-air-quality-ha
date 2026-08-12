@@ -37,7 +37,7 @@ class _Session:
 
 @pytest.mark.asyncio
 async def test_reads_multiple_chunks_and_korean_utf8():
-    encoded = "부산 덕천동".encode("utf-8")
+    encoded = "부산 덕천동".encode()
     api = WeatheriApi(_Session(_Response([encoded[:5], encoded[5:]])))
     assert await api.async_fetch_html("https://www.weatheri.co.kr/") == "부산 덕천동"
 

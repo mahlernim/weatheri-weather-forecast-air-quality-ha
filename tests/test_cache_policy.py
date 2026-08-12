@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 from weatheri_forecast.models import (
     ForecastSnapshot,
@@ -11,7 +11,7 @@ def _snapshot(source_date: date) -> ForecastSnapshot:
     return ForecastSnapshot(
         location="부산",
         source_date=source_date,
-        fetched_at=datetime(2026, 7, 19, 6, 0, tzinfo=timezone.utc),
+        fetched_at=datetime(2026, 7, 19, 6, 0, tzinfo=UTC),
         today=WeatheriDayForecast(source_date, 31, 26),
         tomorrow=WeatheriDayForecast(date(2026, 7, 20), 32, 27),
     )
