@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, tzinfo
 import re
+from datetime import date, datetime, timedelta, tzinfo
 
 from bs4 import BeautifulSoup, Tag
 

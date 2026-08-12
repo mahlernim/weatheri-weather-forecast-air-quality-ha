@@ -2,9 +2,12 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import pytest
-
 from weatheri_forecast.models import AirQualitySnapshot, air_snapshot_is_current
-from weatheri_forecast.parser import WeatheriParseError, discover_air_stations, parse_air_quality_html
+from weatheri_forecast.parser import (
+    WeatheriParseError,
+    discover_air_stations,
+    parse_air_quality_html,
+)
 
 TZ = ZoneInfo("Asia/Seoul")
 NOW = datetime(2026, 7, 19, 18, 30, tzinfo=TZ)

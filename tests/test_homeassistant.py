@@ -1,7 +1,7 @@
 """Home Assistant integration tests; skipped in parser-only environments."""
 
-from unittest.mock import AsyncMock, patch
 from datetime import datetime
+from unittest.mock import AsyncMock, patch
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -13,6 +13,10 @@ from homeassistant import config_entries, data_entry_flow
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.weatheri_forecast.api import WeatheriApiError
+from custom_components.weatheri_forecast.binary_sensor import (
+    WeatheriAirHealth,
+    WeatheriForecastHealth,
+)
 from custom_components.weatheri_forecast.catalog import get_location
 from custom_components.weatheri_forecast.const import (
     CONF_AIR_REGION_CODE,
@@ -24,19 +28,15 @@ from custom_components.weatheri_forecast.const import (
     ENTRY_VERSION,
     NO_AIR_STATION,
 )
-from custom_components.weatheri_forecast.binary_sensor import (
-    WeatheriAirHealth,
-    WeatheriForecastHealth,
+from custom_components.weatheri_forecast.coordinator import (
+    WeatheriAirCoordinator,
+    WeatheriForecastCoordinator,
 )
 from custom_components.weatheri_forecast.sensor import (
     AIR_SENSORS,
     TEMPERATURES,
     WeatheriAirSensor,
     WeatheriTemperatureSensor,
-)
-from custom_components.weatheri_forecast.coordinator import (
-    WeatheriAirCoordinator,
-    WeatheriForecastCoordinator,
 )
 from custom_components.weatheri_forecast.url import build_air_url, build_forecast_url
 

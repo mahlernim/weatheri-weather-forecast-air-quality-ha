@@ -1,7 +1,6 @@
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 import pytest
-
 from weatheri_forecast.parser import WeatheriParseError, parse_forecast_html
 
 
@@ -28,7 +27,7 @@ def _summary_html(
     """
 
 
-NOW = datetime(2026, 7, 19, 15, 0, tzinfo=timezone.utc)
+NOW = datetime(2026, 7, 19, 15, 0, tzinfo=UTC)
 
 
 def test_parse_valid_forecast():
